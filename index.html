@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Arquisistemas OS v5.5 (iOS Large UI)</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <title>Arquisistemas OS v10.0 (Zenith View Engine)</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
@@ -16,306 +16,147 @@
             --text-main: #f1f5f9;
             --text-muted: #64748b;
             --border: #1e293b;
-            --grid-color: rgba(37, 99, 235, 0.02);
         }
 
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
             -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
 
         body {
             background-color: #000000;
             color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; min-height: -webkit-fill-available;
             overflow: hidden;
         }
 
         .app-shell {
-            width: 100%;
-            max-width: 412px;
-            height: 100vh;
-            height: 100svh; 
+            width: 100%; max-width: 412px;
+            height: 100vh; height: 100svh; 
             background-color: var(--bg-dark);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-            border-left: 1px solid var(--border);
-            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            position: relative; overflow: hidden;
+            border-left: 1px solid var(--border); border-right: 1px solid var(--border);
             padding-bottom: env(safe-area-inset-bottom); 
         }
 
         @media (min-width: 413px) {
             .app-shell {
-                height: 85vh;
-                border-radius: 28px;
+                height: 85vh; border-radius: 28px;
                 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
                 border: 1px solid var(--border);
             }
         }
 
-        .app-shell::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 20px 20px;
-            pointer-events: none;
-            z-index: 1;
-        }
-
         .app-header {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border);
-            background: rgba(5, 7, 10, 0.85);
-            backdrop-filter: blur(12px);
-            z-index: 10;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 12px 16px; border-bottom: 1px solid var(--border);
+            background: rgba(5, 7, 10, 0.85); backdrop-filter: blur(12px); z-index: 10;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .app-header h1 {
-            font-size: 0.75rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 500;
-            letter-spacing: 1px;
-        }
+        .app-header h1 { font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+        .status-indicator { display: flex; align-items: center; gap: 5px; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--success); }
+        .status-dot { width: 5px; height: 5px; background-color: var(--success); border-radius: 50%; }
 
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.6rem;
-            color: var(--success);
-        }
+        .app-main { flex: 1; overflow: hidden; padding: 12px; display: flex; flex-direction: column; z-index: 5; }
+        .view-panel { display: none; height: 100%; }
+        .view-panel.active { display: flex; flex-direction: column; gap: 10px; height: 100%; }
 
-        .status-dot {
-            width: 5px;
-            height: 5px;
-            background-color: var(--success);
-            border-radius: 50%;
-        }
-
-        .app-main {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            z-index: 5;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .view-panel {
-            display: none;
-            height: 100%;
-        }
-
-        .view-panel.active {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .module-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-        }
-
-        .body-text {
-            font-size: 0.88rem;
-            line-height: 1.5;
-            color: #cbd5e1;
-            font-weight: 300;
-            text-align: justify;
-        }
-
-        .highlight {
-            color: var(--text-main);
-            font-weight: 500;
-            background: linear-gradient(0deg, rgba(37, 99, 235, 0.15) 0%, transparent 100%);
-            padding: 0 2px;
-        }
-
-        .technical-label {
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            overflow: hidden;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.6rem;
-            background-color: #020406;
-            margin-top: auto;
-        }
-
+        /* VISTAS AUXILIARES */
+        .module-card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+        .body-text { font-size: 0.88rem; line-height: 1.5; color: #cbd5e1; font-weight: 300; text-align: justify; }
+        .highlight { color: var(--text-main); font-weight: 600; background: linear-gradient(0deg, rgba(37, 99, 235, 0.15) 0%, transparent 100%); padding: 0 2px; }
+        .technical-label { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; background-color: #020406; margin-top: auto; }
         .label-row { display: flex; border-bottom: 1px solid var(--border); }
-        .label-row:last-child { border-bottom: none; }
         .label-cell { flex: 1; padding: 8px; border-right: 1px solid var(--border); color: var(--text-muted); }
         .label-cell:last-child { border-right: none; }
         .label-cell strong { color: var(--text-main); }
-
-        /* TRIVIA INTERFAZ */
+        
         .progress-track { width: 100%; height: 3px; background-color: var(--border); border-radius: 2px; margin-bottom: 8px; overflow: hidden; }
         .progress-fill { height: 100%; width: 11%; background-color: var(--accent); transition: width 0.3s; }
-        .quiz-title { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
-        .question-prompt { font-size: 0.95rem; font-weight: 500; margin-bottom: 14px; line-height: 1.3; }
-        .option-selector { width: 100%; padding: 12px; background-color: #111622; border: 1px solid var(--border); border-radius: 8px; text-align: left; font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px; }
+        .quiz-title { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
+        .question-prompt { font-size: 0.95rem; font-weight: 600; margin-bottom: 14px; line-height: 1.3; }
+        .option-selector { width: 100%; padding: 14px; background-color: #111622; border: 1px solid var(--border); border-radius: 8px; text-align: left; font-size: 0.88rem; color: #94a3b8; margin-bottom: 8px; font-weight: 600; }
         .option-selector.success-state { border-color: var(--success); background-color: rgba(16, 185, 129, 0.05); color: #a7f3d0; }
-        #log-output { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; min-height: 18px; margin-top: 2px; }
+        #log-output { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; min-height: 18px; }
 
-        /* --- INTERFAZ CAD REDISEÑADA (MENÚ GRANDE) --- */
+        /* --- VISOR ENTORNO FLUIDO TÁCTIL --- */
         .viewport-3d-container {
             background-color: #020406;
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 12px;
             width: 100%;
-            height: 205px; /* Dinámico para ceder espacio a los botones grandes */
+            flex: 1;
+            min-height: 220px;
             overflow: hidden;
             position: relative;
+            touch-action: none;
         }
 
         #townscaper-canvas { width: 100%; height: 100%; display: block; }
 
         .zoom-controls {
             position: absolute;
-            right: 10px;
-            top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            z-index: 15;
+            right: 12px; top: 12px;
+            display: flex; flex-direction: column; gap: 8px; z-index: 20;
         }
 
         .zoom-btn {
-            width: 34px;
-            height: 34px;
-            background-color: rgba(12, 16, 23, 0.9);
+            width: 42px; height: 42px;
+            background-color: rgba(12, 16, 23, 0.95);
             border: 1px solid var(--border);
-            color: var(--text-main);
-            border-radius: 6px;
-            cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.1rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(4px);
+            color: var(--text-main); border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace; font-size: 1.3rem;
+            display: flex; justify-content: center; align-items: center;
         }
 
-        /* BARRA DE FIGURAS MÁS GRANDE */
-        .geometry-bar {
-            display: flex;
-            gap: 6px;
-            width: 100%;
+        /* CONSOLA DE MANDOS GIGANTES ERGONÓMICOS */
+        .control-panel-large {
+            display: flex; flex-direction: column; gap: 10px;
+            background-color: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 12px; margin-top: auto;
         }
 
+        .geometry-bar { display: flex; gap: 6px; width: 100%; }
         .geo-btn {
-            flex: 1;
-            background-color: #090d14;
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: 12px 4px; /* Incremento de área táctil vertical */
-            border-radius: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.68rem;
-            font-weight: 500;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.15s ease;
+            flex: 1; background-color: #05070a; border: 1px solid var(--border); color: var(--text-muted);
+            padding: 14px 2px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 600; text-align: center;
         }
+        .geo-btn.active-geo { border-color: var(--success); color: var(--text-main); background-color: rgba(16, 185, 129, 0.15); }
 
-        .geo-btn.active-geo { 
-            border-color: var(--success); 
-            color: var(--text-main); 
-            background-color: rgba(16, 185, 129, 0.12);
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+        /* NUEVA BARRA DE PERSPECTIVA */
+        .camera-bar { display: flex; gap: 6px; width: 100%; }
+        .cam-btn {
+            flex: 1; background-color: #05070a; border: 1px solid var(--border); color: var(--text-muted);
+            padding: 10px 2px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 600; text-align: center;
         }
+        .cam-btn.active-cam { border-color: var(--accent); color: var(--text-main); background-color: rgba(37, 99, 235, 0.15); }
 
-        /* BARRA DE ACCIÓN PRINCIPAL EXPANDIDA (TAMAÑO MACRO) */
-        .tool-bar {
-            display: flex;
-            gap: 8px;
-            margin-top: 4px;
-            width: 100%;
-        }
-
+        .tool-bar { display: flex; gap: 8px; width: 100%; }
         .tool-btn {
-            flex: 1;
-            background-color: #111622;
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: 16px 10px; /* Tamaño grande ideal para interacción móvil */
-            border-radius: 10px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.15s ease;
+            flex: 1; background-color: #111622; border: 1px solid var(--border); color: var(--text-muted);
+            padding: 16px 10px; border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; text-align: center;
         }
-
-        .tool-btn.active-add { 
-            border-color: var(--accent); 
-            color: var(--text-main); 
-            background-color: rgba(37, 99, 235, 0.15); 
-            box-shadow: 0 0 12px rgba(37, 99, 235, 0.15);
-        }
+        .tool-btn.active-add { border-color: var(--accent); color: var(--text-main); background-color: rgba(37, 99, 235, 0.2); }
+        .tool-btn.active-delete { border-color: var(--danger); color: var(--text-main); background-color: rgba(239, 68, 68, 0.2); }
         
-        .tool-btn.active-delete { 
-            border-color: var(--danger); 
-            color: var(--text-main); 
-            background-color: rgba(239, 68, 68, 0.15); 
-            box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
-        }
+        .clear-btn { flex: 0.35; background: #05070a; border-color: var(--border); font-size: 0.65rem; }
 
-        /* NAVBAR IOS */
+        /* NAVBAR STYLES */
         .app-navbar {
-            width: 100%;
-            height: 65px;
-            background: rgba(5, 7, 10, 0.92);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding-bottom: 4px;
-            z-index: 10;
-            margin-top: auto;
+            width: 100%; height: 65px; background: rgba(5, 7, 10, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 4px; z-index: 10;
         }
-
         .nav-tab {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.6rem;
-            width: 100%;
-            height: 100%;
-            justify-content: center;
+            background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 3px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; width: 100%; height: 100%; justify-content: center;
         }
-
         .nav-tab svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .nav-tab.active { color: var(--accent); }
+        .nav-tab.active { color: var(--accent); font-weight: 600; }
     </style>
 </head>
 <body>
@@ -323,8 +164,8 @@
     <div class="app-shell">
         
         <header class="app-header">
-            <h1>ARQUISISTEMAS_OS // V5.5</h1>
-            <div class="status-indicator"><div class="status-dot"></div><span>UI_MACRO_STABLE</span></div>
+            <h1>ARQUISISTEMAS_OS // V10.0</h1>
+            <div class="status-indicator"><div class="status-dot"></div><span>ZENITH_CAMERA_READY</span></div>
         </header>
 
         <main class="app-main">
@@ -339,21 +180,14 @@
                         Realmente disfruto de tu compañía y, si me dejas, <span class="highlight">quiero estar en tu vida por mucho tiempo</span>, apoyándote en <span class="highlight">cada una de las entregas de cada semestre de tu carrera</span>.
                     </p>
                 </div>
-
                 <div class="technical-label">
-                    <div class="label-row">
-                        <div class="label-cell"><strong>PROY:</strong> ARQUISISTEMAS</div>
-                        <div class="label-cell"><strong>PLAN:</strong> LARGO PLAZO</div>
-                    </div>
-                    <div class="label-row">
-                        <div class="label-cell"><strong>DOC:</strong> MEMORIA DESCRIPTIVA</div>
-                        <div class="label-cell"><strong>CICLO:</strong> COMPLETO</div>
-                    </div>
+                    <div class="label-row"><div class="label-cell"><strong>PROY:</strong> ARQUISISTEMAS</div><div class="label-cell"><strong>PLAN:</strong> LARGO PLAZO</div></div>
+                    <div class="label-row"><div class="label-cell"><strong>DOC:</strong> MEMORIA DESCRIPTIVA</div><div class="label-cell"><strong>CICLO:</strong> COMPLETO</div></div>
                 </div>
             </div>
 
             <div id="panel-trivia" class="view-panel">
-                <div class="module-card" style="height: 100%;">
+                <div class="module-card" style="height: 100%; display: flex; flex-direction: column; justify-content: center;">
                     <div class="progress-track"><div id="quiz-progress-bar" class="progress-fill"></div></div>
                     <div class="quiz-title" id="quiz-step-counter">EVALUACIÓN: 1/9</div>
                     <div id="quiz-runtime">
@@ -365,9 +199,23 @@
             </div>
 
             <div id="panel-graficos" class="view-panel">
-                <div class="module-card" style="display:flex; flex-direction:column; gap:10px; padding: 12px; height:100%;">
-                    
-                    <div class="quiz-title">[01] SELECCIONAR FIGURA</div>
+                
+                <div class="viewport-3d-container" id="canvas-container-mask">
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" onclick="modifyZoom(-1)">+</button>
+                        <button class="zoom-btn" onclick="modifyZoom(1)">-</button>
+                    </div>
+                    <div id="townscaper-canvas"></div>
+                </div>
+
+                <div class="control-panel-large">
+                    <div class="quiz-title">[01] VISTA DE CÁMARA</div>
+                    <div class="camera-bar">
+                        <button id="cam-3d" class="cam-btn active-cam" onclick="setCameraView('3d')">PERSPECTIVA (3D)</button>
+                        <button id="cam-top" class="cam-btn" onclick="setCameraView('top')">DESDE ARRIBA (PLANTA)</button>
+                    </div>
+
+                    <div class="quiz-title">[02] GEOMETRÍA ACTIVA</div>
                     <div class="geometry-bar">
                         <button id="geo-box" class="geo-btn active-geo" onclick="setGeometry('box')">CUBO</button>
                         <button id="geo-cylinder" class="geo-btn" onclick="setGeometry('cylinder')">COLUMNA</button>
@@ -375,22 +223,14 @@
                         <button id="geo-sphere" class="geo-btn" onclick="setGeometry('sphere')">CÚPULA</button>
                     </div>
 
-                    <div class="quiz-title" style="margin-top: 2px;">[02] VISOR INTERACTIVO</div>
-                    <div class="viewport-3d-container">
-                        <div class="zoom-controls">
-                            <button class="zoom-btn" onclick="modifyZoom(-1)">+</button>
-                            <button class="zoom-btn" onclick="modifyZoom(1)">-</button>
-                        </div>
-                        <div id="townscaper-canvas"></div>
-                    </div>
-
-                    <div class="quiz-title" style="margin-top: 2px;">[03] COMANDOS PRINCIPALES</div>
+                    <div class="quiz-title">[03] ACCIÓN DE TOQUE (TAP)</div>
                     <div class="tool-bar">
                         <button id="tool-add" class="tool-btn active-add" onclick="setTool('add')">CONSTRUIR</button>
                         <button id="tool-del" class="tool-btn" onclick="setTool('delete')">ELIMINAR</button>
-                        <button class="tool-btn" style="flex:0.4; border-color:var(--border); background:#05070a; font-size:0.65rem;" onclick="resetTownscaper()">CLEAR</button>
+                        <button class="tool-btn clear-btn" onclick="resetTownscaper()">CLEAR</button>
                     </div>
                 </div>
+                
             </div>
 
         </main>
@@ -424,15 +264,15 @@
 
         // --- TRIVIA SYSTEM ---
         const quizDatabase = [
-            { q: "Si necesitas que un objeto en el plano represente exactamente la mitad de su tamaño real, ¿qué escala usas?", opts: ["A) Escala 1:2", "B) Escala 2:1", "C) Escala 1:50"], ans: 0, win: "Escala de reducción correcta.", lose: "Cálculo incorrecto. Revisa proporciones." },
+            { q: "Si necesitas que un objecto en el plano represente exactamente la mitad de su tamaño real, ¿qué escala usas?", opts: ["A) Escala 1:2", "B) Escala 2:1", "C) Escala 1:50"], ans: 0, win: "Escala de reducción correcta.", lose: "Cálculo incorrecto. Revisa proporciones." },
             { q: "Sistema normativo de medidas basado en el cuerpo humano y desarrollado por Le Corbusier:", opts: ["A) Proporción Áurea", "B) El Modulor", "C) Escala Constructiva"], ans: 1, win: "Correcto. El Modulor.", lose: "Incorrecto. Apunta a la modulación humana." },
             { q: "Representación gráfica que expone la distribución interna mediante un corte vertical:", opts: ["A) Fachada", "B) Planta de conjunto", "C) Sección Constructiva"], ans: 2, win: "Sección identificada.", lose: "La planta es horizontal. Intenta de nuevo." },
             { q: "Software que se mantiene como estándar para el desarrollo de planimetría técnica 2D:", opts: ["A) Revit", "B) AutoCAD", "C) SketchUp Pro"], ans: 1, win: "AutoCAD seleccionado.", lose: "Ese software procesa principalmente 3D o BIM." },
             { q: "Elemento estructural de apoyo vertical encargado de recibir cargas y trabajar a compresión:", opts: ["A) Zapata", "B) Viga", "C) Columna"], ans: 2, win: "Columna estructural asignada.", lose: "La viga trabaja de forma horizontal a flexión." },
             { q: "Insumo técnico de taller que tiende a desaparecer misteriosamente antes de las entregas:", opts: ["A) El escalímetro", "B) El portaminas", "C) El cuaderno de bitácora"], ans: 0, win: "El escalímetro, un clásico perdido.", lose: "Está cerca, pero hay otro más codiciado." },
             { q: "Tipo de cimentación requerida cuando el estrato firme de suelo se encuentra a gran profundidad:", opts: ["A) Pilotes (Profunda)", "B) Losa de cimentación", "C) Zapata aislada"], ans: 0, win: "Cimentación profunda correcta.", lose: "Las zapatas operan a niveles superficiales." },
-            { q: "¿Cuál es el mejor elemento de soporte para asegurar que nuestra relación sea estable a largo plazo?", opts: ["A) Muros de contención masivos", "B) Confianza, comunicación y tiempo de calidad", "C) Concreto armado pretensado"], ans: 1, win: "Base seleccionada. Esos son los cimientos reales.", lose: "Físicamente válido, pero para nosotros la respuesta es otra." },
-            { q: "¿Quién está 100% disponible para apoyarte en los desvelos de las entregas de este semestre?", opts: ["A) Tus profesores de taller", "B) El motor de renderizado", "C) El desarrollador de esta aplicación"], ans: 2, win: "Compromiso confirmado. Cuenta con ello.", lose: "El taller no perdona. La respuesta correcta es otra." }
+            { q: "...¿Cuál es el mejor cimiento para asegurar una relación estable a largo plazo?", opts: ["A) Muros de contención masivos", "B) Confianza, comunicación y tiempo de calidad", "C) Concreto armado pretensado"], ans: 1, win: "Cimientos reales asignados.", lose: "Estructuralmente fuerte, pero para nosotros la respuesta es otra." },
+            { q: "¿Quién está disponible para apoyarte en los desvelos de taller de este semestre?", opts: ["A) Tus profesores de la facultad", "B) El motor de renderizado", "C) El desarrollador de esta app"], ans: 2, win: "Compromiso total activo.", lose: "Ellos no perdonan las entregas. ¡Intenta otra!" }
         ];
 
         let quizIndex = 0;
@@ -446,10 +286,8 @@
             const optionsBox = document.getElementById('target-options');
             optionsBox.innerHTML = "";
             current.opts.forEach((option, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'option-selector';
-                btn.innerText = option;
-                btn.onclick = () => verifySelection(i, btn);
+                const btn = document.createElement('button'); btn.className = 'option-selector';
+                btn.innerText = option; btn.onclick = () => verifySelection(i, btn);
                 optionsBox.appendChild(btn);
             });
         }
@@ -458,28 +296,23 @@
             const current = quizDatabase[quizIndex];
             const log = document.getElementById('log-output');
             if(selectedIdx === current.ans) {
-                log.innerText = ">> STATUS: " + current.win;
-                log.style.color = "var(--success)";
+                log.innerText = ">> STATUS: " + current.win; log.style.color = "var(--success)";
                 element.classList.add('success-state');
                 document.querySelectorAll('.option-selector').forEach(b => b.disabled = true);
                 setTimeout(() => {
                     quizIndex++;
                     if(quizIndex < quizDatabase.length) { loadQuestion(); } 
-                    else { document.getElementById('quiz-runtime').innerHTML = "<p style='text-align:center; font-family:\"JetBrains Mono\", monospace; color:var(--success); padding: 20px 0;'>[ CONTROL DE CALIDAD PROCESADO: SISTEMA 100% ESTABLE ]</p>"; }
+                    else { document.getElementById('quiz-runtime').innerHTML = "<p style='text-align:center; font-family:\"JetBrains Mono\", monospace; color:var(--success); padding: 20px 0;'>[ CONTROL DE CALIDAD COMPLETO: APPSHELL OPERATIVA ]</p>"; }
                 }, 1000);
-            } else {
-                log.innerText = ">> ERROR: " + current.lose;
-                log.style.color = "#ef4444";
-            }
+            } else { log.innerText = ">> ERROR: " + current.lose; log.style.color = "#ef4444"; }
         }
 
-        // --- CAD ENGINE ---
+        // --- ENTORNO GRÁFICO MULTI-PERSPECTIVA ---
         let scene, camera, renderer, raycaster, mouse;
-        let gridPlane, currentTool = 'add', currentGeometry = 'box'; 
+        let gridPlane, currentTool = 'add', currentGeometry = 'box', currentView = '3d'; 
         let blocks = [], isTownscaperActive = false;
-        let guideBox; 
         let theta = 45 * Math.PI / 180; 
-        let cameraRadius = 8; 
+        let cameraRadius = 7.0; 
 
         function setTool(tool) {
             currentTool = tool;
@@ -491,27 +324,20 @@
             currentGeometry = type;
             document.querySelectorAll('.geo-btn').forEach(b => b.classList.remove('active-geo'));
             document.getElementById(`geo-${type}`).classList.add('active-geo');
-            scene.remove(guideBox);
-            buildGuide();
+        }
+
+        function setCameraView(view) {
+            currentView = view;
+            document.getElementById('cam-3d').className = 'cam-btn' + (view === '3d' ? ' active-cam' : '');
+            document.getElementById('cam-top').className = 'cam-btn' + (view === 'top' ? ' active-cam' : '');
+            updateCameraPosition();
         }
 
         function modifyZoom(direction) {
             cameraRadius += direction * 0.8; 
-            if (cameraRadius < 3.5) cameraRadius = 3.5;
+            if (cameraRadius < 3.0) cameraRadius = 3.0;
             if (cameraRadius > 12) cameraRadius = 12;
             updateCameraPosition();
-        }
-
-        function buildGuide() {
-            let geo;
-            if (currentGeometry === 'box') geo = new THREE.BoxGeometry(1, 1, 1);
-            if (currentGeometry === 'cylinder') geo = new THREE.CylinderGeometry(0.48, 0.48, 1, 16);
-            if (currentGeometry === 'cone') geo = new THREE.ConeGeometry(0.55, 1, 16);
-            if (currentGeometry === 'sphere') geo = new THREE.SphereGeometry(0.5, 16, 16);
-
-            const mat = new THREE.MeshBasicMaterial({ color: 0x2563eb, wireframe: true, transparent: true, opacity: 0.6 });
-            guideBox = new THREE.Mesh(geo, mat);
-            scene.add(guideBox);
         }
 
         function initTownscaper() {
@@ -521,40 +347,66 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color('#020406');
 
-            camera = new THREE.PerspectiveCamera(40, container.offsetWidth / 205, 0.1, 1000);
+            camera = new THREE.PerspectiveCamera(42, container.offsetWidth / container.offsetHeight, 0.1, 1000);
             updateCameraPosition();
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(container.offsetWidth, 205);
+            renderer.setSize(container.offsetWidth, container.offsetHeight);
             container.appendChild(renderer.domElement);
 
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
 
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
-            dirLight.position.set(5, 12, 6);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+            dirLight.position.set(6, 12, 5);
             scene.add(dirLight);
             
-            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x333333, 0.4);
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x333333, 0.5);
             scene.add(hemiLight);
 
-            const planeGeo = new THREE.PlaneGeometry(10, 10);
+            const planeGeo = new THREE.PlaneGeometry(24, 24);
             planeGeo.rotateX(-Math.PI / 2);
             gridPlane = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ visible: false }));
             scene.add(gridPlane);
 
             const gridHelper = new THREE.GridHelper(10, 10, 0x2563eb, 0x1e293b);
+            gridHelper.position.y = 0.01;
             scene.add(gridHelper);
 
-            buildGuide();
+            let touchStartTime = 0;
+            let startX = 0, startY = 0;
+            let isMovingCamera = false;
 
-            container.addEventListener('pointermove', onPointerMove);
-            container.addEventListener('pointerdown', onGridAction);
+            container.addEventListener('pointerdown', (e) => {
+                touchStartTime = performance.now();
+                startX = e.clientX;
+                startY = e.clientY;
+                isMovingCamera = true;
+            });
+
+            container.addEventListener('pointermove', (e) => {
+                if (isMovingCamera && currentView === '3d') { // Solo rotar si está en modo Perspectiva
+                    const deltaX = e.clientX - startX;
+                    if (Math.abs(deltaX) > 5) {
+                        theta -= deltaX * 0.007;
+                        startX = e.clientX;
+                        updateCameraPosition();
+                    }
+                }
+            });
+
+            container.addEventListener('pointerup', (e) => {
+                isMovingCamera = false;
+                const duration = performance.now() - touchStartTime;
+                const distMove = Math.hypot(e.clientX - startX, e.clientY - startY);
+
+                if (duration < 280 && distMove < 8) {
+                    triggerActionAtPointer(e);
+                }
+            });
 
             function renderLoop() {
                 requestAnimationFrame(renderLoop);
-                theta += 0.002; 
-                updateCameraPosition();
                 renderer.render(scene, camera);
             }
             renderLoop();
@@ -562,44 +414,27 @@
         }
 
         function updateCameraPosition() {
-            camera.position.x = cameraRadius * Math.sin(theta);
-            camera.position.z = cameraRadius * Math.cos(theta);
-            camera.position.y = 5.0; 
-            camera.lookAt(0, 0.6, 0);
-        }
-
-        function onPointerMove(event) {
-            const rect = renderer.domElement.getBoundingClientRect();
-            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects([gridPlane, ...blocks]);
-
-            if (intersects.length > 0) {
-                const intersect = intersects[0];
-
-                if (currentTool === 'add') {
-                    guideBox.visible = true;
-                    guideBox.material.color.setHex(0x2563eb); 
-                    const targetPosition = new THREE.Vector3().copy(intersect.point).add(intersect.face.normal);
-                    guideBox.position.x = Math.floor(targetPosition.x) + 0.5;
-                    guideBox.position.y = Math.floor(targetPosition.y) + 0.5;
-                    guideBox.position.z = Math.floor(targetPosition.z) + 0.5;
-                } else if (currentTool === 'delete' && intersect.object !== gridPlane) {
-                    guideBox.visible = true;
-                    guideBox.material.color.setHex(0xef4444); 
-                    guideBox.position.copy(intersect.object.position);
-                } else {
-                    guideBox.visible = false;
-                }
+            if (currentView === 'top') {
+                // Configuración exacta para vista cenital (Desde arriba en 90 grados)
+                camera.position.set(0, cameraRadius + 1, 0);
+                camera.lookAt(0, 0, 0);
+            } else {
+                // Configuración isométrica fluida estándar
+                camera.position.x = cameraRadius * Math.sin(theta);
+                camera.position.z = cameraRadius * Math.cos(theta);
+                camera.position.y = 3.9; 
+                camera.lookAt(0, 0.6, 0);
             }
         }
 
-        function onGridAction(event) {
+        function triggerActionAtPointer(event) {
             const rect = renderer.domElement.getBoundingClientRect();
+            
+            // Compensación táctil para el pulgar
+            const adjustedClientY = event.clientY - 12;
+
             mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            mouse.y = -((adjustedClientY - rect.top) / rect.height) * 2 + 1;
 
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects([gridPlane, ...blocks]);
@@ -620,7 +455,19 @@
                     });
                     
                     const voxel = new THREE.Mesh(geo, blockMat);
-                    voxel.position.copy(guideBox.position);
+                    let targetPosition = new THREE.Vector3();
+
+                    if (intersect.object === gridPlane) {
+                        targetPosition.copy(intersect.point);
+                        voxel.position.x = Math.floor(targetPosition.x) + 0.5;
+                        voxel.position.y = 0.5; 
+                        voxel.position.z = Math.floor(targetPosition.z) + 0.5;
+                    } else {
+                        targetPosition.copy(intersect.point).add(intersect.face.normal);
+                        voxel.position.x = Math.floor(targetPosition.x) + 0.5;
+                        voxel.position.y = Math.floor(targetPosition.y) + 0.5;
+                        voxel.position.z = Math.floor(targetPosition.z) + 0.5;
+                    }
 
                     if(voxel.position.y >= 0 && Math.abs(voxel.position.x) < 5 && Math.abs(voxel.position.z) < 5) {
                         scene.add(voxel);
@@ -629,7 +476,6 @@
                 } else if (currentTool === 'delete' && intersect.object !== gridPlane) {
                     scene.remove(intersect.object);
                     blocks = blocks.filter(b => b !== intersect.object);
-                    guideBox.visible = false;
                 }
             }
         }
@@ -637,7 +483,6 @@
         function resetTownscaper() {
             blocks.forEach(b => scene.remove(b));
             blocks = [];
-            guideBox.visible = false;
         }
     </script>
 </body>
