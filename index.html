@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arquisistemas OS v4.5</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #05070a;
+            --bg-card: #0c1017;
+            --accent: #2563eb; 
+            --danger: #ef4444;
+            --success: #10b981;
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+            --border: #1e293b;
+            --grid-color: rgba(37, 99, 235, 0.03);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #000000;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-shell {
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            background-color: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+        }
+
+        @media (min-width: 413px) {
+            .app-shell {
+                height: 88vh;
+                border-radius: 28px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+                border: 1px solid var(--border);
+            }
+        }
+
+        .app-shell::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .app-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(5, 7, 10, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-header h1 {
+            font-size: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--success);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--success);
+            border-radius: 50%;
+        }
+
+        .app-main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 95px;
+            z-index: 5;
+        }
+
+        .view-panel {
+            display: none;
+            animation: panelFade 0.25s ease-out;
+        }
+
+        .view-panel.active {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        @keyframes panelFade {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .module-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .body-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+            font-weight: 300;
+            text-align: justify;
+        }
+
+        .highlight {
+            color: var(--text-main);
+            font-weight: 500;
+            background: linear-gradient(0deg, rgba(37, 99, 235, 0.15) 0%, transparent 100%);
+            padding: 0 4px;
+        }
+
+        .technical-label {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            background-color: #020406;
+        }
+
+        .label-row { display: flex; border-bottom: 1px solid var(--border); }
+        .label-row:last-child { border-bottom: none; }
+        .label-cell { flex: 1; padding: 10px; border-right: 1px solid var(--border); color: var(--text-muted); }
+        .label-cell:last-child { border-right: none; }
+        .label-cell strong { color: var(--text-main); }
+
+        /* TRIVIA INTERFAZ */
+        .progress-track { width: 100%; height: 3px; background-color: var(--border); border-radius: 2px; margin-bottom: 12px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 11%; background-color: var(--accent); transition: width 0.3s; }
+        .quiz-title { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; }
+        .question-prompt { font-size: 1.05rem; font-weight: 500; margin-bottom: 20px; line-height: 1.4; }
+        .option-selector { width: 100%; padding: 14px; background-color: #111622; border: 1px solid var(--border); border-radius: 10px; text-align: left; font-size: 0.9rem; cursor: pointer; color: #94a3b8; margin-bottom: 10px; }
+        .option-selector.success-state { border-color: var(--success); background-color: rgba(16, 185, 129, 0.05); color: #a7f3d0; }
+        #log-output { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; min-height: 20px; margin-top: 5px; }
+
+        /* VISOR 3D CAD EXTENDIDO */
+        .viewport-3d-container {
+            background-color: #020406;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #townscaper-canvas { width: 100%; height: 100%; display: block; }
+
+        /* CONTROLES DE ZOOM INTEGRADOS */
+        .zoom-controls {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 15;
+        }
+
+        .zoom-btn {
+            width: 32px;
+            height: 32px;
+            background-color: rgba(12, 16, 23, 0.85);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .tool-bar {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .tool-btn {
+            flex: 1;
+            background-color: #111622;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .tool-btn.active-add { border-color: var(--accent); color: var(--text-main); background-color: rgba(37, 99, 235, 0.1); }
+        .tool-btn.active-delete { border-color: var(--danger); color: var(--text-main); background-color: rgba(239, 68, 68, 0.1); }
+
+        .geometry-bar {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .geo-btn {
+            flex: 1;
+            background-color: #090d14;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .geo-btn.active-geo { border-color: var(--success); color: var(--text-main); background-color: rgba(16, 185, 129, 0.1); }
+
+        /* NAVBAR */
+        .app-navbar {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            height: 70px;
+            background: rgba(5, 7, 10, 0.9);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 10px;
+            z-index: 10;
+        }
+
+        .nav-tab {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+        }
+
+        .nav-tab svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .nav-tab.active { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="app-shell">
+        
+        <header class="app-header">
+            <h1>ARQUISISTEMAS_OS // V4.5</h1>
+            <div class="status-indicator"><div class="status-dot"></div><span>ZOOM_STABLE</span></div>
+        </header>
+
+        <main class="app-main">
+            
+            <div id="panel-memoria" class="view-panel active">
+                <div class="module-card">
+                    <p class="body-text">
+                        Sé que llevamos muy poco tiempo conociéndonos, pero desde que apareciste tengo muchas ganas de <span class="highlight">hacer las cosas bien</span>.
+                        <br><br>
+                        Así como analizas cada terreno antes de proyectar, yo he valorado cada momento a tu lado. Si en algo he fallado, <span class="highlight">perdóname todo lo malo</span>; mi única intención es construir algo sólido contigo.
+                        <br><br>
+                        Realmente disfruto de tu compañía y, si me dejas, <span class="highlight">quiero estar en tu vida por mucho tiempo</span>, apoyándote en <span class="highlight">cada una de las entregas de cada semestre de tu carrera</span>.
+                    </p>
+                </div>
+
+                <div class="technical-label">
+                    <div class="label-row">
+                        <div class="label-cell"><strong>PROY:</strong> ARQUISISTEMAS</div>
+                        <div class="label-cell"><strong>PLAN:</strong> LARGO PLAZO</div>
+                    </div>
+                    <div class="label-row">
+                        <div class="label-cell"><strong>DOC:</strong> MEMORIA DESCRIPTIVA</div>
+                        <div class="label-cell"><strong>CICLO:</strong> COMPLETO</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-trivia" class="view-panel">
+                <div class="module-card">
+                    <div class="progress-track"><div id="quiz-progress-bar" class="progress-fill"></div></div>
+                    <div class="quiz-title" id="quiz-step-counter">EVALUACIÓN: 1/9</div>
+                    <div id="quiz-runtime">
+                        <p id="target-question" class="question-prompt">Cargando...</p>
+                        <div id="target-options"></div>
+                        <p id="log-output"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-graficos" class="view-panel">
+                <div class="module-card">
+                    <div class="quiz-title">[01] SELECTOR DE FIGURA GEOMÉTRICA</div>
+                    <div class="geometry-bar">
+                        <button id="geo-box" class="geo-btn active-geo" onclick="setGeometry('box')">CUBO</button>
+                        <button id="geo-cylinder" class="geo-btn" onclick="setGeometry('cylinder')">COLUMNA</button>
+                        <button id="geo-cone" class="geo-btn" onclick="setGeometry('cone')">TECHADO</button>
+                        <button id="geo-sphere" class="geo-btn" onclick="setGeometry('sphere')">CÚPULA</button>
+                    </div>
+
+                    <div class="quiz-title" style="margin-top: 12px;">[02] VISOR ORBITAL INTERACTIVO</div>
+                    <div class="viewport-3d-container">
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" onclick="modifyZoom(-1)">+</button>
+                            <button class="zoom-btn" onclick="modifyZoom(1)">-</button>
+                        </div>
+                        <div id="townscaper-canvas"></div>
+                    </div>
+
+                    <div class="tool-bar">
+                        <button id="tool-add" class="tool-btn active-add" onclick="setTool('add')">CONSTRUIR</button>
+                        <button id="tool-del" class="tool-btn" onclick="setTool('delete')">ELIMINAR</button>
+                        <button class="tool-btn" style="flex:0.5; border-color:var(--border);" onclick="resetTownscaper()">CLEAR</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <nav class="app-navbar">
+            <button class="nav-tab active" onclick="navigate('memoria', this)">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                MEMORIA
+            </button>
+            <button class="nav-tab" onclick="navigate('trivia', this)">
+                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                TRIVIA
+            </button>
+            <button class="nav-tab" onclick="navigate('graficos', this)">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                GENERADOR
+            </button>
+        </nav>
+
+    </div>
+
+    <script>
+        function navigate(targetId, tabButton) {
+            document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`panel-${targetId}`).classList.add('active');
+            tabButton.classList.add('active');
+            if(targetId === 'trivia') bootQuiz();
+            if(targetId === 'graficos') initTownscaper();
+        }
+
+        // --- TRIVIA SYSTEM ---
+        const quizDatabase = [
+            { q: "Si necesitas que un objecto en el plano represente exactamente la mitad de su tamaño real, ¿qué escala usas?", opts: ["A) Escala 1:2", "B) Escala 2:1", "C) Escala 1:50"], ans: 0, win: "Escala de reducción correcta.", lose: "Cálculo incorrecto. Revisa proporciones." },
+            { q: "Sistema normativo de medidas basado en el cuerpo humano y desarrollado por Le Corbusier:", opts: ["A) Proporción Áurea", "B) El Modulor", "C) Escala Constructiva"], ans: 1, win: "Correcto. El Modulor.", lose: "Incorrecto. Apunta a la modulación humana." },
+            { q: "Representación gráfica que expone la distribución interna mediante un corte vertical:", opts: ["A) Fachada", "B) Planta de conjunto", "C) Sección Constructiva"], ans: 2, win: "Sección identificada.", lose: "La planta es horizontal. Intenta de nuevo." },
+            { q: "Software que se mantiene como estándar para el desarrollo de planimetría técnica 2D:", opts: ["A) Revit", "B) AutoCAD", "C) SketchUp Pro"], ans: 1, win: "AutoCAD seleccionado.", lose: "Ese software procesa principalmente 3D o BIM." },
+            { q: "Elemento estructural de apoyo vertical encargado de recibir cargas y trabajar a compresión:", opts: ["A) Zapata", "B) Viga", "C) Columna"], ans: 2, win: "Columna estructural asignada.", lose: "La viga trabaja de forma horizontal a flexión." },
+            { q: "Insumo técnico de taller que tiende a desaparecer misteriosamente antes de las entregas:", opts: ["A) El escalímetro", "B) El portaminas", "C) El cuaderno de bitácora"], ans: 0, win: "El escalímetro, un clásico perdido.", lose: "Está cerca, pero hay otro más codiciado." },
+            { q: "Tipo de cimentación requerida cuando el estrato firme de suelo se encuentra a gran profundidad:", opts: ["A) Pilotes (Profunda)", "B) Losa de cimentación", "C) Zapata aislada"], ans: 0, win: "Cimentación profunda correcta.", lose: "Las zapatas operan a niveles superficiales." },
+            { q: "¿Cuál es el mejor elemento de soporte para asegurar que nuestra relación sea estable a largo plazo?", opts: ["A) Muros de contención masivos", "B) Confianza, comunicación y tiempo de calidad", "C) Concreto armado pretensado"], ans: 1, win: "Base seleccionada. Esos son los cimientos reales.", lose: "Físicamente válido, pero para nosotros la respuesta es otra." },
+            { q: "¿Quién está 100% disponible para apoyarte en los desvelos de las entregas de este semestre?", opts: ["A) Tus profesores de taller", "B) El motor de renderizado", "C) El desarrollador de esta aplicación"], ans: 2, win: "Compromiso confirmado. Cuenta con ello.", lose: "El taller no perdona. La respuesta correcta es otra." }
+        ];
+
+        let quizIndex = 0;
+        function bootQuiz() { quizIndex = 0; loadQuestion(); }
+        function loadQuestion() {
+            const current = quizDatabase[quizIndex];
+            document.getElementById('quiz-progress-bar').style.width = `${((quizIndex + 1) / quizDatabase.length) * 100}%`;
+            document.getElementById('quiz-step-counter').innerText = `EVALUACIÓN: ${quizIndex + 1} / ${quizDatabase.length}`;
+            document.getElementById('target-question').innerText = current.q;
+            document.getElementById('log-output').innerText = "";
+            const optionsBox = document.getElementById('target-options');
+            optionsBox.innerHTML = "";
+            current.opts.forEach((option, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-selector';
+                btn.innerText = option;
+                btn.onclick = () => verifySelection(i, btn);
+                optionsBox.appendChild(btn);
+            });
+        }
+
+        function verifySelection(selectedIdx, element) {
+            const current = quizDatabase[quizIndex];
+            const log = document.getElementById('log-output');
+            if(selectedIdx === current.ans) {
+                log.innerText = ">> STATUS: " + current.win;
+                log.style.color = "var(--success)";
+                element.classList.add('success-state');
+                document.querySelectorAll('.option-selector').forEach(b => b.disabled = true);
+                setTimeout(() => {
+                    quizIndex++;
+                    if(quizIndex < quizDatabase.length) { loadQuestion(); } 
+                    else { document.getElementById('quiz-runtime').innerHTML = "<p style='text-align:center; font-family:\"JetBrains Mono\", monospace; color:var(--success); padding: 30px 0;'>[ CONTROL DE CALIDAD PROCESADO: SISTEMA 100% ESTABLE ]</p>"; }
+                }, 1000);
+            } else {
+                log.innerText = ">> ERROR: " + current.lose;
+                log.style.color = "#ef4444";
+            }
+        }
+
+        // --- MOTOR CAD (ZOOM EN PRECISIÓN + REMOVER ELEMENTOS MULTIFIGURAS) ---
+        let scene, camera, renderer, raycaster, mouse;
+        let gridPlane, currentTool = 'add', currentGeometry = 'box'; 
+        let blocks = [], isTownscaperActive = false;
+        let guideBox; 
+        const blockSize = 1;
+        let theta = 45 * Math.PI / 180; 
+        let cameraRadius = 9; // Variable dinámica de control de zoom
+
+        function setTool(tool) {
+            currentTool = tool;
+            document.getElementById('tool-add').className = 'tool-btn' + (tool === 'add' ? ' active-add' : '');
+            document.getElementById('tool-del').className = 'tool-btn' + (tool === 'delete' ? ' active-delete' : '');
+        }
+
+        function setGeometry(type) {
+            currentGeometry = type;
+            document.querySelectorAll('.geo-btn').forEach(b => b.classList.remove('active-geo'));
+            document.getElementById(`geo-${type}`).classList.add('active-geo');
+            scene.remove(guideBox);
+            buildGuide();
+        }
+
+        // CONTROLADOR INTEGRADO DE DISTANCIA DE CAMARA (ZOOM IN / ZOOM OUT)
+        function modifyZoom(direction) {
+            cameraRadius += direction * 1.0; 
+            // Límites de seguridad focal para evitar colapso de render
+            if (cameraRadius < 4) cameraRadius = 4;
+            if (cameraRadius > 15) cameraRadius = 15;
+            updateCameraPosition();
+        }
+
+        function buildGuide() {
+            let geo;
+            if (currentGeometry === 'box') geo = new THREE.BoxGeometry(1, 1, 1);
+            if (currentGeometry === 'cylinder') geo = new THREE.CylinderGeometry(0.48, 0.48, 1, 16);
+            if (currentGeometry === 'cone') geo = new THREE.ConeGeometry(0.55, 1, 16);
+            if (currentGeometry === 'sphere') geo = new THREE.SphereGeometry(0.5, 16, 16);
+
+            const mat = new THREE.MeshBasicMaterial({ color: 0x2563eb, wireframe: true, transparent: true, opacity: 0.6 });
+            guideBox = new THREE.Mesh(geo, mat);
+            scene.add(guideBox);
+        }
+
+        function initTownscaper() {
+            if(isTownscaperActive) return;
+            const container = document.getElementById('townscaper-canvas');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color('#020406');
+
+            camera = new THREE.PerspectiveCamera(40, container.offsetWidth / 300, 0.1, 1000);
+            updateCameraPosition();
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.offsetWidth, 300);
+            container.appendChild(renderer.domElement);
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+            dirLight.position.set(5, 12, 6);
+            scene.add(dirLight);
+            
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x333333, 0.4);
+            scene.add(hemiLight);
+
+            const planeGeo = new THREE.PlaneGeometry(10, 10);
+            planeGeo.rotateX(-Math.PI / 2);
+            gridPlane = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ visible: false }));
+            scene.add(gridPlane);
+
+            const gridHelper = new THREE.GridHelper(10, 10, 0x2563eb, 0x1e293b);
+            scene.add(gridHelper);
+
+            buildGuide();
+
+            container.addEventListener('pointermove', onPointerMove);
+            container.addEventListener('pointerdown', onGridAction);
+
+            function renderLoop() {
+                requestAnimationFrame(renderLoop);
+                theta += 0.0018; 
+                updateCameraPosition();
+                renderer.render(scene, camera);
+            }
+            renderLoop();
+            isTownscaperActive = true;
+        }
+
+        function updateCameraPosition() {
+            camera.position.x = cameraRadius * Math.sin(theta);
+            camera.position.z = cameraRadius * Math.cos(theta);
+            camera.position.y = 5.5; 
+            camera.lookAt(0, 0.8, 0);
+        }
+
+        function onPointerMove(event) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects([gridPlane, ...blocks]);
+
+            if (intersects.length > 0) {
+                const intersect = intersects[0];
+
+                if (currentTool === 'add') {
+                    guideBox.visible = true;
+                    guideBox.material.color.setHex(0x2563eb); 
+                    const targetPosition = new THREE.Vector3().copy(intersect.point).add(intersect.face.normal);
+                    guideBox.position.x = Math.floor(targetPosition.x) + 0.5;
+                    guideBox.position.y = Math.floor(targetPosition.y) + 0.5;
+                    guideBox.position.z = Math.floor(targetPosition.z) + 0.5;
+                } else if (currentTool === 'delete' && intersect.object !== gridPlane) {
+                    // ENFOQUE RADICAL EN ROJO SI PASA EL CURSOR SOBRE CUALQUIER FIGURA A BORRAR
+                    guideBox.visible = true;
+                    guideBox.material.color.setHex(0xef4444); 
+                    guideBox.position.copy(intersect.object.position);
+                } else {
+                    guideBox.visible = false;
+                }
+            }
+        }
+
+        function onGridAction(event) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects([gridPlane, ...blocks]);
+
+            if (intersects.length > 0) {
+                const intersect = intersects[0];
+
+                if (currentTool === 'add') {
+                    let geo;
+                    if (currentGeometry === 'box') geo = new THREE.BoxGeometry(0.96, 0.96, 0.96);
+                    if (currentGeometry === 'cylinder') geo = new THREE.CylinderGeometry(0.46, 0.46, 0.96, 16);
+                    if (currentGeometry === 'cone') geo = new THREE.ConeGeometry(0.52, 0.96, 16);
+                    if (currentGeometry === 'sphere') geo = new THREE.SphereGeometry(0.48, 16, 16);
+
+                    const blockMat = new THREE.MeshPhongMaterial({ 
+                        color: new THREE.Color().setHSL(Math.random() * 0.12 + 0.52, 0.75, 0.48), 
+                        flatShading: true
+                    });
+                    
+                    const voxel = new THREE.Mesh(geo, blockMat);
+                    voxel.position.copy(guideBox.position);
+
+                    if(voxel.position.y >= 0 && Math.abs(voxel.position.x) < 5 && Math.abs(voxel.position.z) < 5) {
+                        scene.add(voxel);
+                        blocks.push(voxel);
+                    }
+                } else if (currentTool === 'delete' && intersect.object !== gridPlane) {
+                    // BORRADO SEGURO E INSTANTÁNEO AL SELECCIONAR LA ENTIDAD 3D
+                    scene.remove(intersect.object);
+                    blocks = blocks.filter(b => b !== intersect.object);
+                    guideBox.visible = false;
+                }
+            }
+        }
+
+        function resetTownscaper() {
+            blocks.forEach(b => scene.remove(b));
+            blocks = [];
+            guideBox.visible = false;
+        }
+    </script>
+</body>
+</html>
